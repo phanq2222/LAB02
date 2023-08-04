@@ -165,7 +165,7 @@ public class UserChatView extends JFrame {
         return chatBoxPanel;
     }
 
-    public JList<String> getOnlineList() {
+    public JList<String> getOnlineListUser() {
         return onlineList;
     }
 
