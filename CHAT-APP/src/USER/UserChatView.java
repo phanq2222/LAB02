@@ -9,7 +9,6 @@ import java.io.DataOutputStream;
 
 public class UserChatView extends JFrame {
 
-
     public UserChatView(String username, DataInputStream dataInputStream, DataOutputStream dataOutputStream) {
         this.username = username;
         this.dataInputStream = dataInputStream;
@@ -81,65 +80,6 @@ public class UserChatView extends JFrame {
 
         sendFileBtn.setText("File");
 
-        GroupLayout chatBoxPanelLayout = new GroupLayout(chatBoxPanel);
-        chatBoxPanel.setLayout(chatBoxPanelLayout);
-        chatBoxPanelLayout.setHorizontalGroup(
-                chatBoxPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                        .addGroup(chatBoxPanelLayout.createSequentialGroup()
-                                .addContainerGap()
-                                .addGroup(chatBoxPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING, false)
-                                        .addComponent(sp)
-                                        .addComponent(receiverUser, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                        .addGroup(chatBoxPanelLayout.createSequentialGroup()
-                                                .addComponent(inputTextField, GroupLayout.PREFERRED_SIZE, 352, GroupLayout.PREFERRED_SIZE)
-                                                .addGap(18, 18, 18)
-                                                .addGroup(chatBoxPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                                                        .addComponent(submitBtn, GroupLayout.DEFAULT_SIZE, 105, Short.MAX_VALUE)
-                                                        .addComponent(sendFileBtn, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
-                                .addGap(18, 18, 18)
-                                .addGroup(chatBoxPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                                        .addComponent(onlineSP)
-                                        .addComponent(onlineUsersLabel, GroupLayout.DEFAULT_SIZE, 186, Short.MAX_VALUE))
-                                .addContainerGap())
-        );
-        chatBoxPanelLayout.setVerticalGroup(
-                chatBoxPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                        .addGroup(chatBoxPanelLayout.createSequentialGroup()
-                                .addContainerGap()
-                                .addGroup(chatBoxPanelLayout.createParallelGroup(GroupLayout.Alignment.BASELINE)
-                                        .addComponent(receiverUser, GroupLayout.DEFAULT_SIZE, 48, Short.MAX_VALUE)
-                                        .addComponent(onlineUsersLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                                .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addGroup(chatBoxPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                                        .addGroup(chatBoxPanelLayout.createSequentialGroup()
-                                                .addComponent(sp, GroupLayout.PREFERRED_SIZE, 329, GroupLayout.PREFERRED_SIZE)
-                                                .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED)
-                                                .addGroup(chatBoxPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING, false)
-                                                        .addComponent(inputTextField)
-                                                        .addComponent(submitBtn, GroupLayout.PREFERRED_SIZE, 31, GroupLayout.PREFERRED_SIZE))
-                                                .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
-                                                .addComponent(sendFileBtn, GroupLayout.DEFAULT_SIZE, 27, Short.MAX_VALUE))
-                                        .addComponent(onlineSP))
-                                .addContainerGap())
-        );
-
-        GroupLayout layout = new GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-                layout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                        .addGroup(layout.createSequentialGroup()
-                                .addContainerGap()
-                                .addComponent(chatBoxPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addContainerGap())
-        );
-        layout.setVerticalGroup(
-                layout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                        .addGroup(layout.createSequentialGroup()
-                                .addContainerGap()
-                                .addComponent(chatBoxPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addContainerGap())
-        );
-
         pack();
     }// </editor-fold>
 
@@ -152,9 +92,11 @@ public class UserChatView extends JFrame {
     private DataOutputStream dataOutputStream;
 
     private JPanel chatBoxPanel;
+    private JLabel onlineUser;
     private JList<String> chatHistoryList;
     private JTextField inputTextField;
     private JList<String> onlineList;
+    private JLabel receiverUser;
     private JButton sendFileBtn;
     private JButton submitBtn;
 
