@@ -1,9 +1,6 @@
 package SERVER;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Files;
@@ -29,6 +26,26 @@ public class ServerService {
         loadAccounts();
     }
 
+    private void loadAccounts() throws IOException {
+        String fileName = "accounts.txt";
+        if (Files.notExists(Path.of(fileName))) {
+            Files.createFile(Path.of(fileName));
+        }
+        BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName));
+
+        String line;
+        while ((line = bufferedReader.readLine()) != null) {
+            String[] account = line.split(" - ");
+
+            String username = account[0];
+            String password = account[1];
+            ClientHandlerThread client = new ClientHandlerThread(username, password, false, lock);
+            clients.put(username, client);
+        }
+
+        bufferedReader.close();
+    }
+
     public void start() throws IOException {
         while (true) {
             this.socket = serverSocket.accept();
@@ -38,7 +55,7 @@ public class ServerService {
 
             switch (incomingMess) {
                 case "login" -> login(dataInputStream);
-                case "register" -> register(dataInputStream);
+//                case "register" -> register(dataInputStream);
             }
         }
     }
@@ -76,6 +93,24 @@ public class ServerService {
         }
     }
 
+    private void notifyOnlineUsers() throws IOException {
+        StringBuilder stringBuilder = new StringBuilder();
+        for (ClientHandlerThread client : clients.values()) {
+            if (client.getIsLogin()) {
+                stringBuilder.append(client.getUsername());
+                stringBuilder.append(";");
+            }
+        }
+        for (ClientHandlerThread client : clients.values()) {
+            if (client.getIsLogin()) {
+                DataOutputStream dataOutputStream = client.getDataOutputStream();
+                dataOutputStream.writeUTF("online-users");
+                dataOutputStream.writeUTF(stringBuilder.toString());
+                dataOutputStream.flush();
+            }
+        }
+    }
+
     class ClientHandlerThread extends Thread {
 
         private final Lock lock;
@@ -88,15 +123,14 @@ public class ServerService {
         final private String password;
         private Boolean isLogin;
 
-        /**
-         * Tạo thread cho tài khoản vừa đăng ký rồi đăng nhập liền
-         *
-         * @param username tên đăng nhập
-         * @param password password
-         * @param isLogin  kiểm tra xem đã login chưa
-         * @param socket   socket của client
-         * @param lock     khoá synchronize
-         */
+        ClientHandlerThread(String username, String password, Boolean isLogin, Lock lock) {
+            this.username = username;
+            this.password = password;
+            this.isLogin = isLogin;
+            this.lock = lock;
+        }
+
+
         ClientHandlerThread(String username, String password, Boolean isLogin, Socket socket, Lock lock)
                 throws IOException {
             this.username = username;
@@ -108,5 +142,115 @@ public class ServerService {
             this.dataOutputStream = new DataOutputStream(socket.getOutputStream());
             this.dataInputStream = new DataInputStream(socket.getInputStream());
         }
+
+        public DataInputStream getDataInputStream() {
+            return dataInputStream;
+        }
+
+        public DataOutputStream getDataOutputStream() {
+            return dataOutputStream;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        public Boolean getIsLogin() {
+            return isLogin;
+        }
+
+        public void setSocket(Socket socket) throws IOException {
+            this.socket = socket;
+
+            this.dataOutputStream = new DataOutputStream(socket.getOutputStream());
+            this.dataInputStream = new DataInputStream(socket.getInputStream());
+        }
+
+        public void setLogin(Boolean isLogin) {
+            this.isLogin = isLogin;
+        }
+
+        @Override
+        public void run() {
+            try {
+                while (true) {
+                    String messageFromClient = dataInputStream.readUTF();
+
+                    if (messageFromClient.equals("logout")) {
+                        dataOutputStream.writeUTF("logout");
+                        dataOutputStream.flush();
+                        socket.close();
+
+                        isLogin = false;
+                        notifyOnlineUsers();
+
+                        break;
+                    }
+                    switch (messageFromClient) {
+                        case "send-text" -> {
+
+                            String receiver = dataInputStream.readUTF();
+                            String content = dataInputStream.readUTF();
+
+                            try {
+                                // Lock synchronize
+                                lock.lock();
+                                ClientHandlerThread client = clients.get(receiver);
+                                client.dataOutputStream.writeUTF("send-text");
+                                client.dataOutputStream.writeUTF(username);
+                                client.dataOutputStream.writeUTF(content);
+                                client.dataOutputStream.flush();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            } finally {
+                                lock.unlock();
+                            }
+                        }
+                        case "send-file" -> {
+
+                            int bufferSize = 4 * 1024;
+                            byte[] buffer = new byte[bufferSize];
+
+                            String receiver = dataInputStream.readUTF();
+                            String fileName = dataInputStream.readUTF();
+                            long fileSize = dataInputStream.readLong();
+
+                            try {
+                                // Lock synchronize
+                                lock.lock();
+                                ClientHandlerThread client = clients.get(receiver);
+                                DataOutputStream clientOutputStream = client.getDataOutputStream();
+
+                                // Thông tin người gửi và thông tin file
+                                clientOutputStream.writeUTF("send-file");
+                                clientOutputStream.writeUTF(username);
+                                clientOutputStream.writeUTF(fileName);
+                                clientOutputStream.writeLong(fileSize);
+
+                                // Gửi file kiểu chunk
+                                while (fileSize > 0) {
+                                    dataInputStream.read(buffer, 0, (int) Math.min(fileSize, bufferSize));
+                                    client.dataOutputStream.write(buffer, 0, (int) Math.min(fileSize, bufferSize));
+                                    fileSize -= bufferSize;
+                                }
+                                clientOutputStream.flush();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            } finally {
+                                lock.unlock();
+                            }
+                        }
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
+
+
 }
