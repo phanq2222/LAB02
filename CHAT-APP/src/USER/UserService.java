@@ -120,7 +120,7 @@ public class UserService {
                 if (selectedUsername == null) {
                     JOptionPane.showMessageDialog(
                             null,
-                            "Choose receiver",
+                            "Choose receiver to send file",
                             "Empty receiver",
                             JOptionPane.INFORMATION_MESSAGE
                     );

@@ -30,7 +30,7 @@ public class UserLoginView  extends JFrame {
         txtPassword = new JPasswordField();
 
 
-        btnRegister.setText("REGISTER");
+        btnRegister.setText("Register");
         btnRegister.setFont(new java.awt.Font("Segoe UI", Font.PLAIN, 10)); // NOI18N
         btnRegister.addActionListener(evt -> {
             try {
@@ -54,7 +54,7 @@ public class UserLoginView  extends JFrame {
                         JOptionPane.INFORMATION_MESSAGE
                 );
 
-                if (res.equals("Register successful")) {
+                if (res.equals("Register account successful")) {
                     new UserService(username, dataInputStream, dataOutputStream);
                     dispose();
                 }

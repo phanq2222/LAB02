@@ -55,8 +55,38 @@ public class ServerService {
 
             switch (incomingMess) {
                 case "login" -> login(dataInputStream);
-//                case "register" -> register(dataInputStream);
+                case "register" -> register(dataInputStream);
             }
+        }
+    }
+
+    private void register(DataInputStream dataInputStream) throws IOException {
+        DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
+
+        String username = dataInputStream.readUTF();
+        String password = dataInputStream.readUTF();
+        if (!clients.containsKey(username)) {
+            if (Files.notExists(Path.of("accounts.txt"))) {
+                Files.createFile(Path.of("accounts.txt"));
+            }
+            FileWriter fileWriter = new FileWriter("accounts.txt", true);
+            fileWriter.write(String.format("%s - %s\n", username, password));
+            fileWriter.flush();
+            fileWriter.close();
+
+            ClientHandlerThread clientHandlerThread = new ClientHandlerThread(username, password, true,
+                    socket, lock);
+            clients.put(username, clientHandlerThread);
+
+            dataOutputStream.writeUTF("Register account successful");
+            dataOutputStream.flush();
+
+            clientHandlerThread.start();
+
+            notifyOnlineUsers();
+        } else {
+            dataOutputStream.writeUTF("Username already existed");
+            dataOutputStream.flush();
         }
     }
 
@@ -111,6 +141,10 @@ public class ServerService {
         }
     }
 
+    public void close() throws IOException {
+        serverSocket.close();
+    }
+
     class ClientHandlerThread extends Thread {
 
         private final Lock lock;
@@ -122,6 +156,26 @@ public class ServerService {
         final private String username;
         final private String password;
         private Boolean isLogin;
+
+        public DataInputStream getDataInputStream() {
+            return dataInputStream;
+        }
+
+        public DataOutputStream getDataOutputStream() {
+            return dataOutputStream;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        public Boolean getIsLogin() {
+            return isLogin;
+        }
 
         ClientHandlerThread(String username, String password, Boolean isLogin, Lock lock) {
             this.username = username;
@@ -143,25 +197,7 @@ public class ServerService {
             this.dataInputStream = new DataInputStream(socket.getInputStream());
         }
 
-        public DataInputStream getDataInputStream() {
-            return dataInputStream;
-        }
 
-        public DataOutputStream getDataOutputStream() {
-            return dataOutputStream;
-        }
-
-        public String getUsername() {
-            return username;
-        }
-
-        public String getPassword() {
-            return password;
-        }
-
-        public Boolean getIsLogin() {
-            return isLogin;
-        }
 
         public void setSocket(Socket socket) throws IOException {
             this.socket = socket;
