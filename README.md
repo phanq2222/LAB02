@@ -53,8 +53,6 @@ Phan Bá Quang - [@Facebook](https://www.facebook.com/profile.php?id=10000929229
 
 ## About The Project
 
-[![Product Name Screen Shot][product-screenshot]]()
-
 Project chat application, uses Java Swing to create the GUI. Project's features include:
 
 - Registering and logging in
